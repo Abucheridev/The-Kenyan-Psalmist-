@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TukoPress - News & Media Platform</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        tuko: {
+                            red: '#e53e3e',
+                            darkRed: '#c53030',
+                            dark: '#1a202c',
+                            card: '#2d3748',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e0; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #a0aec0; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade { animation: fadeIn 0.3s ease-out forwards; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-900 flex flex-col min-h-full">
+
+    <!-- Notification Toast Container -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- Top Breaking News Bar -->
+    <div class="bg-gradient-to-r from-red-700 to-red-600 text-white text-xs md:text-sm py-2 px-4 shadow-inner">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-2 overflow-hidden">
+                <span class="bg-white text-red-700 font-ext500 uppercase px-2 py-0.5 rounded text-[10px] md:text-xs tracking-wider animate-pulse flex-shrink-0">
+                    <i class="fa-solid fa-bolt mr-1"></i> Breaking
+                </span>
+                <p id="breaking-ticker-text" class="truncate font-medium">
+                    Supreme Court announces landmark ruling on digital privacy and content moderation standards...
+                </p>
+            </div>
+            <div class="hidden md:flex items-center gap-4 text-xs font-medium opacity-90 flex-shrink-0">
+                <span><i class="fa-regular fa-calendar mr-1"></i> <span id="current-date"></span></span>
+                <span><i class="fa-solid fa-cloud-sun mr-1"></i> Nairobi 24°C</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Navigation Bar -->
+    <header class="bg-white border-b border-gray-200 sticky top-0 z-40 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16 md:h-20">
+                <!-- Brand / Logo -->
+                <div class="flex items-center gap-3">
+                    <button id="mobile-menu-btn" class="md:hidden text-gray-600 hover:text-red-600 p-2 text-lg">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
+                    <a href="#" onclick="switchView('reader')" class="flex items-center gap-2 group">
+                        <div class="bg-red-600 text-white w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-black text-xl md:text-2xl shadow-md group-hover:bg-red-700 transition">
+                            T
+                        </div>
+                        <div>
+                            <span class="text-xl md:text-2xl font-black tracking-tight text-gray-900">Tuko<span class="text-red-600">Press</span></span>
+                            <span class="block text-[10px] text-gray-500 font-semibold tracking-widest uppercase">Global News & Media</span>
+                        </div>
+                    </a>
+                </div>
+
+                <!-- Desktop Search Bar -->
+                <div class="hidden lg:flex items-center flex-1 max-w-md mx-8">
+                    <div class="relative w-full">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-gray-400">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </span>
+                        <input type="text" id="global-search" oninput="handleSearch(this.value)" placeholder="Search trending news, politics, tech..." 
+                            class="w-full pl-10 pr-4 py-2 bg-gray-100 border border-transparent rounded-full text-sm focus:outline-none focus:bg-white focus:border-red-500 focus:ring-2 focus:ring-red-100 transition">
+                    </div>
+                </div>
+
+                <!-- Action Controls & View Toggle -->
+                <div class="flex items-center gap-3">
+                    <button id="view-toggle-btn" onclick="toggleAdminMode()" class="flex items-center gap-2 bg-gray-900 hover:bg-gray-800 text-white text-xs md:text-sm font-semibold px-4 py-2.5 rounded-xl shadow transition transform active:scale-95">
+                        <i id="view-toggle-icon" class="fa-solid fa-gauge-high"></i>
+                        <span id="view-toggle-text">CMS Dashboard</span>
+                    </button>
+                    <div class="hidden sm:flex items-center gap-2 pl-3 border-l border-gray-200">
+                        <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150" alt="Admin Avatar" class="w-9 h-9 rounded-full object-cover ring-2 ring-red-500">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Categories Navigation Bar -->
+        <div id="category-nav-bar" class="bg-gray-900 text-white border-t border-gray-800">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between overflow-x-auto no-scrollbar">
+                <nav class="flex items-center gap-1 md:gap-2 py-2.5 text-xs md:text-sm font-medium whitespace-nowrap">
+                    <button onclick="filterCategory('All')" class="cat-btn px-3 py-1.5 rounded-lg bg-red-600 text-white font-semibold transition" data-cat="All">
+                        <i class="fa-solid fa-globe mr-1.5"></i> All Stories
+                    </button>
+                    <button onclick="filterCategory('News')" class="cat-btn px-3 py-1.5 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white transition" data-cat="News">
+                        <i class="fa-solid fa-newspaper mr-1.5"></i> News
+                    </button>
+                    <button onclick="filterCategory('Politics')" class="cat-btn px-3 py-1.5 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white transition" data-cat="Politics">
+                        <i class="fa-solid fa-landmark mr-1.5"></i> Politics
+                    </button>
+                    <button onclick="filterCategory('Entertainment')" class="cat-btn px-3 py-1.5 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white transition" data-cat="Entertainment">
+                        <i class="fa-solid fa-film mr-1.5"></i> Entertainment
+                    </button>
+                    <button onclick="filterCategory('Tech')" class="cat-btn px-3 py-1.5 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white transition" data-cat="Tech">
+                        <i class="fa-solid fa-microchip mr-1.5"></i> Tech
+                    </button>
+                    <button onclick="filterCategory('Lifestyle')" class="cat-btn px-3 py-1.5 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white transition" data-cat="Lifestyle">
+                        <i class="fa-solid fa-heart mr-1.5"></i> Lifestyle
+                    </button>
+                </nav>
+                <div class="hidden lg:flex items-center gap-3 text-xs text-gray-400 pl-4 border-l border-gray-800">
+                    <span><i class="fa-solid fa-fire text-orange-500 mr-1"></i> Trending topics</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Dynamic Application Container -->
+    <main class="flex-grow">
+        
+        <!-- ================= READER VIEW ================= -->
+        <div id="reader-view" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8 animate-fade">
+            
+            <!-- Hero Featured Grid Section -->
+            <section id="hero-section" class="mb-10">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div id="main-hero-card" class="lg:col-span-2 relative rounded-2xl overflow-hidden shadow-lg group cursor-pointer h-[380px] sm:h-[440px] flex flex-col justify-end bg-gray-900"></div>
+                    <div id="sub-hero-container" class="flex flex-col gap-6"></div>
+                </div>
+            </section>
+
+            <!-- Main Feed & Sidebar Section -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="lg:col-span-2">
+                    <div class="flex items-center justify-between mb-6 pb-2 border-b-2 border-gray-200">
+                        <div class="flex items-center gap-2">
+                            <span class="w-3 h-6 bg-red-600 rounded-sm"></span>
+                            <h2 id="feed-title" class="text-xl md:text-2xl font-black text-gray-900 tracking-tight">Latest Stories</h2>
+                        </div>
+                        <div class="text-sm text-gray-500 font-medium" id="post-count-badge">Showing all posts</div>
+                    </div>
+
+                    <div id="articles-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-6"></div>
+
+                    <div id="empty-state" class="hidden text-center py-16 bg-white rounded-2xl border border-dashed border-gray-300 mt-4">
+                        <div class="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
+                            <i class="fa-solid fa-folder-open"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-800">No articles found</h3>
+                        <p class="text-sm text-gray-500 mt-1">Try switching categories or searching for a different keyword.</p>
+                        <button onclick="filterCategory('All'); document.getElementById('global-search').value='';" class="mt-4 px-4 py-2 bg-gray-900 text-white rounded-xl text-xs font-semibold hover:bg-gray-800 transition">
+                            Reset Filters
+                        </button>
+                    </div>
+                </div>
+
+                <aside class="space-y-6">
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
+                        <div class="flex items-center gap-2 pb-4 mb-4 border-b border-gray-100">
+                            <div class="bg-red-100 text-red-600 w-8 h-8 rounded-lg flex items-center justify-center font-bold">
+                                <i class="fa-solid fa-arrow-trend-up"></i>
+                            </div>
+                            <h3 class="font-black text-gray-900 text-base">Trending Now</h3>
+                        </div>
+                        <div id="trending-list" class="space-y-4"></div>
+                    </div>
+
+                    <div class="bg-gradient-to-br from-gray-900 to-gray-800 text-white rounded-2xl p-6 shadow-xl relative overflow-hidden">
+                        <div class="absolute -right-6 -bottom-6 w-32 h-32 bg-red-600/20 rounded-full blur-2xl pointer-events-none"></div>
+                        <div class="relative z-10">
+                            <span class="bg-red-600 text-white text-[10px] uppercase font-bold px-2 py-0.5 rounded tracking-wider">Stay Informed</span>
+                            <h4 class="text-lg font-black mt-2">Get Top Stories in Your Inbox</h4>
+                            <p class="text-xs text-gray-300 mt-1 mb-4 leading-relaxed">Join 150,000+ readers who receive our daily morning news digest.</p>
+                            <form onsubmit="handleNewsletter(event)" class="space-y-3">
+                                <input type="email" placeholder="Your email address" required 
+                                    class="w-full px-3.5 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-sm text-white placeholder-gray-400 focus:outline-none focus:border-red-500">
+                                <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 rounded-xl text-xs uppercase tracking-wider transition shadow-md">
+                                    Subscribe Free
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </aside>
+            </div>
+        </div>
+
+        <!-- ================= ADMIN / CMS DASHBOARD VIEW ================= -->
+        <div id="admin-view" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8 hidden animate-fade">
+            
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 pb-6 border-b border-gray-200">
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="bg-red-600 text-white px-2.5 py-1 rounded-lg text-xs font-bold uppercase tracking-wider">CMS Console</span>
+                        <span class="text-xs text-gray-500 font-medium">WordPress & Tuko Engine v3.4</span>
+                    </div>
+                    <h1 class="text-2xl md:text-3xl font-black text-gray-900 mt-1">Publisher Dashboard</h1>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button onclick="openPostModal()" class="bg-red-600 hover:bg-red-700 text-white text-sm font-bold px-5 py-2.5 rounded-xl shadow-md transition flex items-center gap-2">
+                        <i class="fa-solid fa-plus-circle"></i> Create New Post
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Total Articles</p>
+                        <h3 id="stat-total-posts" class="text-2xl font-black text-gray-900 mt-1">0</h3>
+                        <span class="text-xs text-emerald-600 font-medium mt-1 inline-block"><i class="fa-solid fa-arrow-up mr-1"></i> +12% this week</span>
+                    </div>
+                    <div class="w-12 h-12 bg-red-50 text-red-600 rounded-xl flex items-center justify-center text-xl shadow-inner">
+                        <i class="fa-solid fa-newspaper"></i>
+                    </div>
+                </div>
+
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Total Views</p>
+                        <h3 id="stat-total-views" class="text-2xl font-black text-gray-900 mt-1">0</h3>
+                        <span class="text-xs text-emerald-600 font-medium mt-1 inline-block"><i class="fa-solid fa-arrow-up mr-1"></i> +18.4% growth</span>
+                    </div>
+                    <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center text-xl shadow-inner">
+                        <i class="fa-solid fa-chart-line"></i>
+                    </div>
+                </div>
+
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Published Posts</p>
+                        <h3 id="stat-published" class="text-2xl font-black text-gray-900 mt-1">0</h3>
+                        <span class="text-xs text-gray-500 font-medium mt-1 inline-block">Live on reader portal</span>
+                    </div>
+                    <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center text-xl shadow-inner">
+                        <i class="fa-solid fa-circle-check"></i>
+                    </div>
+                </div>
+
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Drafts</p>
+                        <h3 id="stat-drafts" class="text-2xl font-black text-gray-900 mt-1">0</h3>
+                        <span class="text-xs text-amber-600 font-medium mt-1 inline-block">Needs review</span>
+                    </div>
+                    <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center text-xl shadow-inner">
+                        <i class="fa-solid fa-file-pen"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                <div class="p-5 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <h3 class="font-black text-gray-900 text-lg">Post Management</h3>
+                        <p class="text-xs text-gray-500">Manage all articles, update content, change statuses, or delete posts.</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <input type="text" id="admin-search" oninput="renderAdminTable()" placeholder="Filter posts..." 
+                            class="px-3.5 py-2 bg-gray-100 border border-transparent rounded-xl text-xs focus:outline-none focus:bg-white focus:border-red-500">
+                        <select id="admin-status-filter" onchange="renderAdminTable()" class="px-3 py-2 bg-gray-100 border border-transparent rounded-xl text-xs font-medium focus:outline-none">
+                            <option value="All">All Status</option>
+                            <option value="Published">Published</option>
+                            <option value="Draft">Draft</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-50 text-[11px] font-bold text-gray-500 uppercase tracking-wider border-b border-gray-200">
+                                <th class="py-3 px-6">Article</th>
+                                <th class="py-3 px-4">Category</th>
+                                <th class="py-3 px-4">Author</th>
+                                <th class="py-3 px-4">Status</th>
+                                <th class="py-3 px-4">Views</th>
+                                <th class="py-3 px-4">Date</th>
+                                <th class="py-3 px-6 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-table-body" class="divide-y divide-gray-100 text-sm"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- ================= FULL ARTICLE READING MODAL ================= -->
+    <div id="article-modal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-6 overflow-y-auto">
+        <div class="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl relative animate-fade">
+            <div class="sticky top-0 bg-white/95 backdrop-blur border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
+                <div class="flex items-center gap-3">
+                    <span id="modal-category" class="bg-red-100 text-red-700 text-xs font-bold px-2.5 py-1 rounded-md uppercase tracking-wider"></span>
+                    <span id="modal-read-time" class="text-xs text-gray-500 font-medium"><i class="fa-regular fa-clock mr-1"></i></span>
+                </div>
+                <button onclick="closeArticleModal()" class="w-9 h-9 bg-gray-100 hover:bg-red-100 hover:text-red-600 text-gray-600 rounded-full flex items-center justify-center transition">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <div class="p-6 md:p-10">
+                <h1 id="modal-title" class="text-2xl md:text-4xl font-black text-gray-900 tracking-tight leading-snug mb-4"></h1>
+                
+                <div class="flex items-center justify-between py-4 mb-6 border-y border-gray-100">
+                    <div class="flex items-center gap-3">
+                        <img id="modal-author-avatar" src="" alt="Author" class="w-11 h-11 rounded-full object-cover ring-2 ring-gray-200">
+                        <div>
+                            <h4 id="modal-author-name" class="font-bold text-gray-900 text-sm"></h4>
+                            <p id="modal-date" class="text-xs text-gray-500"></p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="shareArticle()" class="px-3.5 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-semibold transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-share-nodes"></i> Share
+                        </button>
+                    </div>
+                </div>
+
+                <div class="mb-8 rounded-2xl overflow-hidden shadow-md max-h-[420px] bg-gray-100">
+                    <img id="modal-image" src="" alt="Article Featured" class="w-full h-full object-cover">
+                </div>
+
+                <p id="modal-excerpt" class="text-lg font-medium text-gray-700 leading-relaxed mb-6 p-4 bg-red-50/50 border-l-4 border-red-600 rounded-r-xl"></p>
+
+                <div id="modal-content" class="prose max-w-none text-gray-800 leading-relaxed space-y-4 text-base md:text-lg"></div>
+
+                <div class="mt-12 pt-8 border-t border-gray-200">
+                    <h3 class="text-xl font-black text-gray-900 mb-6 flex items-center gap-2">
+                        <i class="fa-regular fa-comments text-red-600"></i> Reader Discussions (<span id="modal-comment-count">0</span>)
+                    </h3>
+                    
+                    <form onsubmit="handleCommentSubmit(event)" class="mb-8 bg-gray-50 p-4 rounded-2xl border border-gray-200">
+                        <h4 class="text-xs font-bold text-gray-700 uppercase mb-2">Leave a comment</h4>
+                        <div class="space-y-3">
+                            <input type="text" id="commenter-name" placeholder="Your name (e.g. John Doe)" required
+                                class="w-full px-3 py-2 bg-white border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-red-500">
+                            <textarea id="commenter-text" rows="3" placeholder="What are your thoughts on this story?" required
+                                class="w-full px-3 py-2 bg-white border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-red-500"></textarea>
+                            <div class="flex justify-end">
+                                <button type="submit" class="bg-red-600 hover:bg-red-700 text-white font-bold px-5 py-2 rounded-xl text-xs transition shadow">
+                                    Post Comment
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <div id="modal-comments-list" class="space-y-4"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= CREATE / EDIT POST MODAL (CMS) ================= -->
+    <div id="post-editor-modal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-6 overflow-y-auto">
+        <div class="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl relative animate-fade">
+            <div class="sticky top-0 bg-white/95 backdrop-blur border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
+                <h3 id="editor-modal-title" class="text-lg font-black text-gray-900">Create New Article</h3>
+                <button onclick="closePostModal()" class="w-9 h-9 bg-gray-100 hover:bg-red-100 hover:text-red-600 text-gray-600 rounded-full flex items-center justify-center transition">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <form onsubmit="handleSavePost(event)" class="p-6 space-y-5">
+                <input type="hidden" id="edit-post-id">
+
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Article Title *</label>
+                    <input type="text" id="post-title-input" required placeholder="Enter an engaging headline..."
+                        class="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-xl text-sm focus:outline-none focus:bg-white focus:border-red-500">
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Category *</label>
+                        <select id="post-category-input" required class="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-xl text-sm focus:outline-none focus:bg-white focus:border-red-500">
+                            <option value="News">News</option>
+                            <option value="Politics">Politics</option>
+                            <option value="Entertainment">Entertainment</option>
+                            <option value="Tech">Tech</option>
+                            <option value="Lifestyle">Lifestyle</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Publication Status *</label>
+                        <select id="post-status-input" required class="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-xl text-sm focus:outline-none focus:bg-white focus:border-red-500">
+                            <option value="Published">Published (Live)</option>
+                            <option value="Draft">Draft (Private)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Featured Image URL *</label>
+                    <input type="url" id="post-image-input" required placeholder="https://images.unsplash.com/..."
+                        class="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-xl text-sm focus:outline-none focus:bg-white focus:border-red-500">
+                    <p class="text-[11px] text-gray-500 mt-1">Tip: Use high-res Unsplash photo URLs for best visual appearance.</p>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Short Excerpt / Lead Summary *</label>
+                    <textarea id="post-excerpt-input" rows="2" required placeholder="Write a short 1-2 sentence hook for the feed..."
+                        class="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-xl text-sm focus:outline-none focus:bg-white focus:border-red-500"></textarea>
+                </div>
+
+                <div>
+                    <div class="flex items-center justify-between mb-1">
+                        <label class="block text-xs font-bold text-gray-700 uppercase">Rich Article Content *</label>
+                        <span class="text-[11px] text-gray-500">Rich Text Simulator Editor</span>
+                    </div>
+                    <textarea id="post-content-input" rows="6" required placeholder="Write your full story article here... (supports paragraphs)"
+                        class="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-xl text-sm focus:outline-none focus:bg-white focus:border-red-500 font-sans"></textarea>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Author Name *</label>
+                        <input type="text" id="post-author-input" required value="Sarah Jenkins"
+                            class="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-xl text-sm focus:outline-none focus:bg-white focus:border-red-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Author Avatar URL *</label>
+                        <input type="url" id="post-avatar-input" required value="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150"
+                            class="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-xl text-sm focus:outline-none focus:bg-white focus:border-red-500">
+                    </div>
+                </div>
+
+                <div class="pt-4 border-t border-gray-200 flex items-center justify-end gap-3">
+                    <button type="button" onclick="closePostModal()" class="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl text-xs transition">
+                        Cancel
+                    </button>
+                    <button type="submit" class="px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-xs transition shadow-md">
+                        Save Article
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white border-t border-gray-800 mt-auto py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+                <div>
+                    <div class="flex items-center gap-2 mb-4">
+                        <div class="bg-red-600 text-white w-8 h-8 rounded-lg flex items-center justify-center font-black text-lg">T</div>
+                        <span class="text-xl font-black tracking-tight">Tuko<span class="text-red-600">Press</span></span>
+                    </div>
+                    <p class="text-xs text-gray-400 leading-relaxed">
+                        Your trusted digital media hub for breaking news, investigative journalism, politics, technology, and lifestyle stories across the globe.
+                    </p>
+                </div>
+                <div>
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-gray-300 mb-3">Categories</h4>
+                    <ul class="space-y-2 text-xs text-gray-400">
+                        <li><a href="#" onclick="filterCategory('News'); return false;" class="hover:text-white transition">World News</a></li>
+                        <li><a href="#" onclick="filterCategory('Politics'); return false;" class="hover:text-white transition">Politics & Governance</a></li>
+                        <li><a href="#" onclick="filterCategory('Entertainment'); return false;" class="hover:text-white transition">Entertainment & Celebs</a></li>
+                        <li><a href="#" onclick="filterCategory('Tech'); return false;" class="hover:text-white transition">Technology & Innovation</a></li>
+                        <li><a href="#" onclick="filterCategory('Lifestyle'); return false;" class="hover:text-white transition">Health & Lifestyle</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-gray-300 mb-3">Editorial Desk</h4>
+                    <ul class="space-y-2 text-xs text-gray-400">
+                        <li><a href="#" onclick="toggleAdminMode(); return false;" class="hover:text-white transition">CMS Dashboard</a></li>
+                        <li><a href="#" onclick="openPostModal(); return false;" class="hover:text-white transition">Submit a Story</a></li>
+                        <li><a href="#" onclick="showToast('Editorial guidelines loaded.'); return false;" class="hover:text-white transition">Editorial Guidelines</a></li>
+                        <li><a href="#" onclick="showToast('Contact desk: news@tukopress.example'); return false;" class="hover:text-white transition">Contact Newsroom</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-gray-300 mb-3">Platform Tech</h4>
+                    <p class="text-xs text-gray-400 mb-3">Built with Tailwind CSS, LocalStorage persistence, and responsive UI components inspired by WordPress & Tuko.</p>
+                    <span class="inline-block bg-gray-800 text-emerald-400 text-[11px] px-2.5 py-1 rounded-lg font-mono">Status: All Systems Normal</span>
+                </div>
+            </div>
+            <div class="pt-8 border-t border-gray-800 text-center text-xs text-gray-500 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <p>&copy; 2026 TukoPress Media Group. All rights reserved.</p>
+                <div class="flex items-center gap-4">
+                    <a href="#" class="hover:text-white transition">Privacy Policy</a>
+                    <a href="#" class="hover:text-white transition">Terms of Service</a>
+                    <a href="#" class="hover:text-white transition">Cookie Preferences</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        const DEFAULT_POSTS = [
+            {
+                id: "tp-1",
+                title: "Global Tech Summit Unveils Breakthrough Quantum Processors for AI Infrastructure",
+                category: "Tech",
+                status: "Published",
+                image: "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&q=80&w=1200",
+                excerpt: "Scientists and industry leaders gathered today to showcase quantum chips capable of processing complex AI computations 10,000x faster than traditional silicon.",
+                content: "Silicon Valley and international research syndicates announced a monumental leap forward in quantum computing today. The newly engineered chips utilize error-corrected qubits operating at room temperature, dramatically lowering cooling barriers.\n\nIndustry experts project that this technology will revolutionize healthcare diagnostics, financial modeling, and autonomous transportation systems within the next 24 months. Several multinational cloud providers have already secured early access rights.",
+                author: "Dr. Marcus Vance",
+                avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150",
+                date: "Oct 24, 2026",
+                readTime: "4 min read",
+                views: 14250,
+                comments: [
+                    { name: "Elena Rostova", text: "This is truly a watershed moment for artificial intelligence!", date: "2 hours ago" },
+                    { name: "David Kim", text: "Excited to see how this impacts cybersecurity encryption standards.", date: "45 mins ago" }
+                ]
+            },
+            {
+                id: "tp-2",
+                title: "Parliament Passes Historic Renewable Energy Bill Aimed at 100% Clean Grid by 2035",
+                category: "Politics",
+                status: "Published",
+                image: "https://images.unsplash.com/photo-1466611653911-95081537e5b7?auto=format&fit=crop&q=80&w=1200",
+                excerpt: "Lawmakers overwhelmingly approved the comprehensive energy transition package after months of bipartisan negotiations.",
+                content: "In a rare show of legislative unity, lawmakers passed the Clean Power Act this morning with a 84-16 vote. The legislation mandates complete decarbonization of the national power grid by 2035 while providing robust subsidies for solar, wind, and next-gen geothermal installations.\n\nEnvironmental watchdogs have praised the strict accountability metrics built into the bill, though heavy industry representatives have raised questions regarding short-term compliance costs.",
+                author: "Amina Okello",
+                avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=150",
+                date: "Oct 24, 2026",
+                readTime: "6 min read",
+                views: 9820,
+                comments: [
+                    { name: "Samuel Ochieng", text: "About time! Clean energy is the only sustainable path forward.", date: "3 hours ago" }
+                ]
+            },
+            {
+                id: "tp-3",
+                title: "Box Office Smash 'Echoes of Horizon' Breaks All-Time Opening Weekend Records",
+                category: "Entertainment",
+                status: "Published",
+                image: "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&q=80&w=1200",
+                excerpt: "Cinemas around the world report sold-out screenings as sci-fi epic captivates audiences with groundbreaking practical effects and gripping storytelling.",
+                content: "Director Lena Thorne's sci-fi masterpiece 'Echoes of Horizon' shattered box office expectations this weekend, pulling in an unprecedented $310 million globally. Critics have lauded the film's immersive world-building and emotional depth, setting a high bar for the upcoming awards season.\n\nFans have already started camping outside specialty IMAX theaters for exclusive screening merchandise.",
+                author: "Julian Thorne",
+                avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=150",
+                date: "Oct 23, 2026",
+                readTime: "3 min read",
+                views: 18400,
+                comments: []
+            },
+            {
+                id: "tp-4",
+                title: "Urban Farming Revolution: How Rooftop Gardens Are Transforming City Skylines",
+                category: "Lifestyle",
+                status: "Published",
+                image: "https://images.unsplash.com/photo-1530836369250-ef72a3f5cda8?auto=format&fit=crop&q=80&w=1200",
+                excerpt: "Metropolitan centers are turning concrete rooftops into lush agricultural hubs, supplying fresh organic produce directly to neighborhood markets.",
+                content: "Urban agriculture is no longer just a niche hobby; it is becoming a cornerstone of sustainable city planning. High-tech hydroponic rooftop farms in major cities now produce thousands of pounds of leafy greens and vegetables annually with 90% less water usage than traditional farming.\n\nArchitects are now incorporating structural load-bearing requirements for commercial farming directly into new skyscraper blueprints.",
+                author: "Sarah Jenkins",
+                avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150",
+                date: "Oct 22, 2026",
+                readTime: "5 min read",
+                views: 6100,
+                comments: []
+            },
+            {
+                id: "tp-5",
+                title: "Global Supply Chains Adopt AI-Powered Autonomous Freight Shipping",
+                category: "News",
+                status: "Published",
+                image: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&q=80&w=1200",
+                excerpt: "Logistics giants report a 40% reduction in delivery bottlenecks following the nationwide deployment of AI fleet coordination.",
+                content: "Logistics networks worldwide have undergone a silent revolution this quarter. Automated freight corridors and self-steering cargo vessels are now continuously communicating through decentralized neural networks to optimize fuel efficiency and port turnaround times.\n\nConsumers are already benefiting from faster transit times and lower retail shipping overheads.",
+                author: "Dr. Marcus Vance",
+                avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150",
+                date: "Oct 21, 2026",
+                readTime: "4 min read",
+                views: 7450,
+                comments: []
+            },
+            {
+                id: "tp-6",
+                title: "Draft Post: Behind the Scenes of the Next-Gen Neural Interface Project",
+                category: "Tech",
+                status: "Draft",
+                image: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&q=80&w=1200",
+                excerpt: "An exclusive look at the laboratory trials testing non-invasive neural telemetry for seamless computer navigation.",
+                content: "This is a working draft exploring the current hurdles in non-invasive brain-computer interfaces. We explore electrode fidelity, signal processing lag, and consumer safety guidelines.",
+                author: "Sarah Jenkins",
+                avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150",
+                date: "Oct 24, 2026",
+                readTime: "5 min read",
+                views: 120,
+                comments: []
+            }
+        ];
+
+        let posts = [];
+        let currentCategoryFilter = 'All';
+        let searchQuery = '';
+        let currentActiveView = 'reader';
+        let currentOpenArticleId = null;
+
+        window.onload = function() {
+            const options = { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' };
+            document.getElementById('current-date').innerText = new Date().toLocaleDateString('en-US', options);
+
+            const savedPosts = localStorage.getItem('tukopress_posts');
+            if (savedPosts) {
+                try {
+                    posts = JSON.parse(savedPosts);
+                } catch (e) {
+                    posts = DEFAULT_POSTS;
+                }
+            } else {
+                posts = DEFAULT_POSTS;
+                saveToLocalStorage();
+            }
+
+            renderReaderApp();
+            renderAdminStats();
+            renderAdminTable();
+        };
+
+        function saveToLocalStorage() {
+            localStorage.setItem('tukopress_posts', JSON.stringify(posts));
+        }
+
+        function showToast(message) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'bg-gray-900 text-white px-4 py-3 rounded-xl shadow-xl text-xs font-semibold flex items-center gap-3 pointer-events-auto animate-fade border border-gray-800';
+            toast.innerHTML = `<i class="fa-solid fa-circle-check text-red-500 text-sm"></i> <span>${message}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transition = 'opacity 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        function toggleAdminMode() {
+            const readerView = document.getElementById('reader-view');
+            const adminView = document.getElementById('admin-view');
+            const toggleBtnText = document.getElementById('view-toggle-text');
+            const toggleIcon = document.getElementById('view-toggle-icon');
+            const categoryNav = document.getElementById('category-nav-bar');
+
+            if (currentActiveView === 'reader') {
+                currentActiveView = 'admin';
+                readerView.classList.add('hidden');
+                adminView.classList.remove('hidden');
+                categoryNav.classList.add('hidden');
+                toggleBtnText.innerText = 'Reader View';
+                toggleIcon.className = 'fa-solid fa-newspaper';
+                renderAdminStats();
+                renderAdminTable();
+                showToast('Switched to CMS Publisher Dashboard');
+            } else {
+                currentActiveView = 'reader';
+                adminView.classList.add('hidden');
+                readerView.classList.remove('hidden');
+                categoryNav.classList.remove('hidden');
+                toggleBtnText.innerText = 'CMS Dashboard';
+                toggleIcon.className = 'fa-solid fa-gauge-high';
+                renderReaderApp();
+                showToast('Switched to Public Reader View');
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function switchView(viewName) {
+            if (viewName === 'reader' && currentActiveView === 'admin') {
+                toggleAdminMode();
+            }
+        }
+
+        function filterCategory(category) {
+            currentCategoryFilter = category;
+            document.querySelectorAll('.cat-btn').forEach(btn => {
+                if (btn.getAttribute('data-cat') === category) {
+                    btn.className = 'cat-btn px-3.5 py-1.5 rounded-lg bg-red-600 text-white font-semibold transition shadow-sm';
+                } else {
+                    btn.className = 'cat-btn px-3.5 py-1.5 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white transition';
+                }
+            });
+            document.getElementById('feed-title').innerText = category === 'All' ? 'Latest Stories' : `${category} Stories`;
+            renderReaderApp();
+        }
+
+        function handleSearch(query) {
+            searchQuery = query.toLowerCase().trim();
+            renderReaderApp();
+        }
+
+        function renderReaderApp() {
+            let filtered = posts.filter(p => p.status === 'Published');
+
+            if (currentCategoryFilter !== 'All') {
+                filtered = filtered.filter(p => p.category.toLowerCase() === currentCategoryFilter.toLowerCase());
+            }
+
+            if (searchQuery) {
+                filtered = filtered.filter(p => 
+                    p.title.toLowerCase().includes(searchQuery) || 
+                    p.excerpt.toLowerCase().includes(searchQuery) ||
+                    p.author.toLowerCase().includes(searchQuery)
+                );
+            }
+
+            const heroSection = document.getElementById('hero-section');
+            const mainHeroCard = document.getElementById('main-hero-card');
+            const subHeroContainer = document.getElementById('sub-hero-container');
+
+            if (filtered.length > 0 && !searchQuery && currentCategoryFilter === 'All') {
+                heroSection.classList.remove('hidden');
+                const main = filtered[0];
+                mainHeroCard.innerHTML = `
+                    <div class="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/40 to-transparent z-10"></div>
+                    <img src="${main.image}" alt="${main.title}" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition duration-700">
+                    <div class="relative z-20 p-6 sm:p-8">
+                        <div class="flex items-center gap-2 mb-3">
+                            <span class="bg-red-600 text-white text-xs font-bold px-2.5 py-1 rounded uppercase tracking-wider">${main.category}</span>
+                            <span class="text-xs text-gray-300 font-medium"><i class="fa-regular fa-clock mr-1"></i> ${main.readTime}</span>
+                        </div>
+                        <h2 class="text-xl sm:text-3xl font-black text-white leading-tight group-hover:text-red-400 transition">${main.title}</h2>
+                        <p class="text-xs sm:text-sm text-gray-300 mt-2 line-clamp-2">${main.excerpt}</p>
+                        <div class="flex items-center gap-3 mt-4 pt-4 border-t border-white/10">
+                            <img src="${main.avatar}" alt="${main.author}" class="w-8 h-8 rounded-full object-cover">
+                            <span class="text-xs font-semibold text-white">${main.author}</span>
+                            <span class="text-xs text-gray-400 ml-auto">${main.date}</span>
+                        </div>
+                    </div>
+                `;
+                mainHeroCard.onclick = () => openArticleModal(main.id);
+
+                let subHtml = '';
+                const subPosts = filtered.slice(1, 3);
+                subPosts.forEach(sub => {
+                    subHtml += `
+                        <div onclick="openArticleModal('${sub.id}')" class="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-200 group cursor-pointer flex flex-col sm:flex-row h-auto sm:h-[210px]">
+                            <div class="sm:w-2/5 relative overflow-hidden h-40 sm:h-full">
+                                <img src="${sub.image}" alt="${sub.title}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                                <span class="absolute top-2 left-2 bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded uppercase">${sub.category}</span>
+                            </div>
+                            <div class="sm:w-3/5 p-4 flex flex-col justify-between">
+                                <div>
+                                    <h3 class="font-black text-gray-900 text-sm sm:text-base leading-snug group-hover:text-red-600 transition line-clamp-2">${sub.title}</h3>
+                                    <p class="text-xs text-gray-500 mt-1 line-clamp-2">${sub.excerpt}</p>
+                                </div>
+                                <div class="flex items-center justify-between pt-3 mt-2 border-t border-gray-100 text-[11px] text-gray-500">
+                                    <span class="font-medium text-gray-800">${sub.author}</span>
+                                    <span>${sub.date}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                subHeroContainer.innerHTML = subHtml || '<div class="text-xs text-gray-400 p-4">More stories coming soon...</div>';
+            } else {
+                heroSection.classList.add('hidden');
+            }
+
+            const gridContainer = document.getElementById('articles-grid');
+            const emptyState = document.getElementById('empty-state');
+            const postCountBadge = document.getElementById('post-count-badge');
+
+            const gridPosts = (!searchQuery && currentCategoryFilter === 'All') ? filtered.slice(3) : filtered;
+            postCountBadge.innerText = `Showing ${gridPosts.length} stories`;
+
+            if (gridPosts.length === 0) {
+                gridContainer.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            } else {
+                emptyState.classList.add('hidden');
+            }
+
+            let gridHtml = '';
+            gridPosts.forEach(post => {
+                gridHtml += `
+                    <div onclick="openArticleModal('${post.id}')" class="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-200 group cursor-pointer flex flex-col justify-between hover:shadow-md transition">
+                        <div>
+                            <div class="relative h-48 overflow-hidden bg-gray-100">
+                                <img src="${post.image}" alt="${post.title}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                                <span class="absolute top-3 left-3 bg-red-600 text-white text-[11px] font-bold px-2.5 py-1 rounded uppercase tracking-wider shadow">${post.category}</span>
+                            </div>
+                            <div class="p-5">
+                                <div class="flex items-center gap-2 text-xs text-gray-500 mb-2">
+                                    <span><i class="fa-regular fa-clock mr-1"></i> ${post.readTime}</span>
+                                    <span>&bull;</span>
+                                    <span><i class="fa-regular fa-eye mr-1"></i> ${post.views.toLocaleString()} views</span>
+                                </div>
+                                <h3 class="font-black text-gray-900 text-base md:text-lg leading-snug group-hover:text-red-600 transition line-clamp-2">${post.title}</h3>
+                                <p class="text-xs text-gray-600 mt-2 line-clamp-2 leading-relaxed">${post.excerpt}</p>
+                            </div>
+                        </div>
+                        <div class="px-5 py-4 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
+                            <div class="flex items-center gap-2">
+                                <img src="${post.avatar}" alt="${post.author}" class="w-7 h-7 rounded-full object-cover">
+                                <span class="font-semibold text-gray-800">${post.author}</span>
+                            </div>
+                            <span>${post.date}</span>
+                        </div>
+                    </div>
+                `;
+            });
+            gridContainer.innerHTML = gridHtml;
+            renderTrendingWidget();
+        }
+
+        function renderTrendingWidget() {
+            const trendingList = document.getElementById('trending-list');
+            const sortedByViews = [...posts].filter(p => p.status === 'Published').sort((a, b) => b.views - a.views).slice(0, 4);
+
+            let trendingHtml = '';
+            sortedByViews.forEach((post, index) => {
+                trendingHtml += `
+                    <div onclick="openArticleModal('${post.id}')" class="flex items-start gap-3 group cursor-pointer pb-3 border-b border-gray-100 last:border-0 last:pb-0">
+                        <span class="text-2xl font-black text-gray-300 group-hover:text-red-600 transition w-6 text-center">0${index + 1}</span>
+                        <div>
+                            <span class="text-[10px] font-bold text-red-600 uppercase">${post.category}</span>
+                            <h4 class="text-xs font-bold text-gray-900 group-hover:text-red-600 transition line-clamp-2 leading-snug mt-0.5">${post.title}</h4>
+                            <span class="text-[10px] text-gray-400 mt-1 block"><i class="fa-regular fa-eye mr-1"></i> ${post.views.toLocaleString()} reads</span>
+                        </div>
+                    </div>
+                `;
+            });
+            trendingList.innerHTML = trendingHtml;
+        }
+
+        function openArticleModal(id) {
+            const post = posts.find(p => p.id === id);
+            if (!post) return;
+
+            currentOpenArticleId = id;
+            post.views += 1;
+            saveToLocalStorage();
+
+            document.getElementById('modal-category').innerText = post.category;
+            document.getElementById('modal-read-time').innerHTML = `<i class="fa-regular fa-clock mr-1"></i> ${post.readTime} &bull; ${post.views.toLocaleString()} views`;
+            document.getElementById('modal-title').innerText = post.title;
+            document.getElementById('modal-author-avatar').src = post.avatar;
+            document.getElementById('modal-author-name').innerText = post.author;
+            document.getElementById('modal-date').innerText = post.date;
+            document.getElementById('modal-image').src = post.image;
+            document.getElementById('modal-excerpt').innerText = post.excerpt;
+
+            const paragraphs = post.content.split('\n\n');
+            let contentHtml = '';
+            paragraphs.forEach(p => { contentHtml += `<p>${p}</p>`; });
+            document.getElementById('modal-content').innerHTML = contentHtml;
+
+            renderModalComments(post);
+
+            const modal = document.getElementById('article-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeArticleModal() {
+            const modal = document.getElementById('article-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            document.body.style.overflow = 'auto';
+            currentOpenArticleId = null;
+            renderReaderApp();
+        }
+
+        function renderModalComments(post) {
+            const list = document.getElementById('modal-comments-list');
+            document.getElementById('modal-comment-count').innerText = post.comments ? post.comments.length : 0;
+
+            if (!post.comments || post.comments.length === 0) {
+                list.innerHTML = `<p class="text-xs text-gray-500 italic py-2">No comments yet. Be the first to share your thoughts!</p>`;
+                return;
+            }
+
+            let html = '';
+            post.comments.forEach(c => {
+                html += `
+                    <div class="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                        <div class="flex items-center justify-between mb-1">
+                            <h5 class="font-bold text-xs text-gray-900">${c.name}</h5>
+                            <span class="text-[10px] text-gray-400">${c.date}</span>
+                        </div>
+                        <p class="text-xs text-gray-700">${c.text}</p>
+                    </div>
+                `;
+            });
+            list.innerHTML = html;
+        }
+
+        function handleCommentSubmit(event) {
+            event.preventDefault();
+            if (!currentOpenArticleId) return;
+
+            const name = document.getElementById('commenter-name').value.trim();
+            const text = document.getElementById('commenter-text').value.trim();
+            const post = posts.find(p => p.id === currentOpenArticleId);
+
+            if (post) {
+                if (!post.comments) post.comments = [];
+                post.comments.unshift({ name, text, date: "Just now" });
+                saveToLocalStorage();
+                renderModalComments(post);
+                document.getElementById('commenter-name').value = '';
+                document.getElementById('commenter-text').value = '';
+                showToast('Comment posted successfully!');
+            }
+        }
+
+        function shareArticle() {
+            showToast('Article link copied to clipboard!');
+        }
+
+        function handleNewsletter(event) {
+            event.preventDefault();
+            showToast('Thank you for subscribing to TukoPress Daily!');
+            event.target.reset();
+        }
+
+        function renderAdminStats() {
+            document.getElementById('stat-total-posts').innerText = posts.length;
+            document.getElementById('stat-total-views').innerText = posts.reduce((acc, p) => acc + p.views, 0).toLocaleString();
+            document.getElementById('stat-published').innerText = posts.filter(p => p.status === 'Published').length;
+            document.getElementById('stat-drafts').innerText = posts.filter(p => p.status === 'Draft').length;
+        }
+
+        function renderAdminTable() {
+            const tbody = document.getElementById('admin-table-body');
+            const searchVal = document.getElementById('admin-search').value.toLowerCase().trim();
+            const statusFilter = document.getElementById('admin-status-filter').value;
+
+            let filtered = posts;
+            if (statusFilter !== 'All') filtered = filtered.filter(p => p.status === statusFilter);
+            if (searchVal) {
+                filtered = filtered.filter(p => 
+                    p.title.toLowerCase().includes(searchVal) || 
+                    p.author.toLowerCase().includes(searchVal) ||
+                    p.category.toLowerCase().includes(searchVal)
+                );
+            }
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-gray-400 text-xs">No articles match your filter criteria.</td></tr>`;
+                return;
+            }
+
+            let html = '';
+            filtered.forEach(post => {
+                const statusBadge = post.status === 'Published' 
+                    ? '<span class="bg-emerald-100 text-emerald-700 font-bold px-2.5 py-1 rounded-md text-[10px] uppercase">Published</span>'
+                    : '<span class="bg-amber-100 text-amber-700 font-bold px-2.5 py-1 rounded-md text-[10px] uppercase">Draft</span>';
+
+                html += `
+                    <tr class="hover:bg-gray-50/80 transition">
+                        <td class="py-3 px-6">
+                            <div class="flex items-center gap-3">
+                                <img src="${post.image}" alt="" class="w-10 h-10 rounded-lg object-cover flex-shrink-0">
+                                <div>
+                                    <h4 class="font-bold text-gray-900 text-xs line-clamp-1 max-w-xs">${post.title}</h4>
+                                    <span class="text-[10px] text-gray-400">ID: ${post.id}</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="py-3 px-4"><span class="bg-gray-100 text-gray-700 font-semibold px-2 py-0.5 rounded text-[11px]">${post.category}</span></td>
+                        <td class="py-3 px-4 text-xs font-medium text-gray-700">${post.author}</td>
+                        <td class="py-3 px-4"><button onclick="togglePostStatus('${post.id}')" class="hover:opacity-85 transition">${statusBadge}</button></td>
+                        <td class="py-3 px-4 text-xs font-semibold text-gray-600">${post.views.toLocaleString()}</td>
+                        <td class="py-3 px-4 text-xs text-gray-500">${post.date}</td>
+                        <td class="py-3 px-6 text-right space-x-2">
+                            <button onclick="openPostModal('${post.id}')" class="w-8 h-8 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg transition inline-flex items-center justify-content text-xs" title="Edit Post"><i class="fa-solid fa-pen-to-square"></i></button>
+                            <button onclick="deletePost('${post.id}')" class="w-8 h-8 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition inline-flex items-center justify-content text-xs" title="Delete Post"><i class="fa-solid fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html;
+        }
+
+        function togglePostStatus(id) {
+            const post = posts.find(p => p.id === id);
+            if (post) {
+                post.status = post.status === 'Published' ? 'Draft' : 'Published';
+                saveToLocalStorage();
+                renderAdminStats();
+                renderAdminTable();
+                showToast(`Post status updated to ${post.status}`);
+            }
+        }
+
+        function deletePost(id) {
+            if (confirm('Are you sure you want to permanently delete this article?')) {
+                posts = posts.filter(p => p.id !== id);
+                saveToLocalStorage();
+                renderAdminStats();
+                renderAdminTable();
+                showToast('Article deleted successfully.');
+            }
+        }
+
+        function openPostModal(id = null) {
+            const modal = document.getElementById('post-editor-modal');
+            const modalTitle = document.getElementById('editor-modal-title');
+
+            if (id) {
+                const post = posts.find(p => p.id === id);
+                if (!post) return;
+                modalTitle.innerText = 'Edit Article';
+                document.getElementById('edit-post-id').value = post.id;
+                document.getElementById('post-title-input').value = post.title;
+                document.getElementById('post-category-input').value = post.category;
+                document.getElementById('post-status-input').value = post.status;
+                document.getElementById('post-image-input').value = post.image;
+                document.getElementById('post-excerpt-input').value = post.excerpt;
+                document.getElementById('post-content-input').value = post.content;
+                document.getElementById('post-author-input').value = post.author;
+                document.getElementById('post-avatar-input').value = post.avatar;
+            } else {
+                modalTitle.innerText = 'Create New Article';
+                document.getElementById('edit-post-id').value = '';
+                document.getElementById('post-title-input').value = '';
+                document.getElementById('post-category-input').value = 'News';
+                document.getElementById('post-status-input').value = 'Published';
+                document.getElementById('post-image-input').value = 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&q=80&w=1200';
+                document.getElementById('post-excerpt-input').value = '';
+                document.getElementById('post-content-input').value = '';
+                document.getElementById('post-author-input').value = 'Sarah Jenkins';
+                document.getElementById('post-avatar-input').value = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150';
+            }
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closePostModal() {
+            const modal = document.getElementById('post-editor-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            document.body.style.overflow = 'auto';
+        }
+
+        function handleSavePost(event) {
+            event.preventDefault();
+
+            const editId = document.getElementById('edit-post-id').value;
+            const title = document.getElementById('post-title-input').value.trim();
+            const category = document.getElementById('post-category-input').value;
+            const status = document.getElementById('post-status-input').value;
+            const image = document.getElementById('post-image-input').value.trim();
+            const excerpt = document.getElementById('post-excerpt-input').value.trim();
+            const content = document.getElementById('post-content-input').value.trim();
+            const author = document.getElementById('post-author-input').value.trim();
+            const avatar = document.getElementById('post-avatar-input').value.trim();
+
+            const wordCount = content.split(/\s+/).length;
+            const readTimeMins = Math.max(1, Math.ceil(wordCount / 200));
+            const readTime = `${readTimeMins} min read`;
+            const formattedDate = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+            if (editId) {
+                const post = posts.find(p => p.id === editId);
+                if (post) {
+                    post.title = title;
+                    post.category = category;
+                    post.status = status;
+                    post.image = image;
+                    post.excerpt = excerpt;
+                    post.content = content;
+                    post.author = author;
+                    post.avatar = avatar;
+                    post.readTime = readTime;
+                    showToast('Article updated successfully!');
+                }
+            } else {
+                const newPost = {
+                    id: 'tp-' + Date.now(),
+                    title, category, status, image, excerpt, content, author, avatar,
+                    date: formattedDate,
+                    readTime,
+                    views: 12,
+                    comments: []
+                };
+                posts.unshift(newPost);
+                showToast('New article published successfully!');
+            }
+
+            saveToLocalStorage();
+            closePostModal();
+            renderAdminStats();
+            renderAdminTable();
+            renderReaderApp();
+        }
+    </script>
+</body>
+</html>
